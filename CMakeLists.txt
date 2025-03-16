@@ -9,8 +9,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 file(GLOB_RECURSE MODULES "src/*.cppm" "src/*.ixx")
 
-add_executable(${PROJECT_NAME}  ${SOURCES} ${MODULES}
-        src/coroutine_demos/generator.cppm)
+add_executable(${PROJECT_NAME}  ${SOURCES} ${MODULES})
 
 include(FetchContent)
 
