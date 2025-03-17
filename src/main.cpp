@@ -54,7 +54,7 @@ int main() {
     std::shared_ptr<int> shptr = std::make_shared<int>(42);
     auto cp{shptr};
 
-    constexpr decltype(&func1) fn1_ptr = ywl::basic::function_t<func1>{};
+    constexpr decltype(&func1) fn1_ptr = ywl::basic::function_t < func1 > {};
 
     int x = fn1_ptr();
 
@@ -82,14 +82,15 @@ int main() {
                | std::views::filter([](int i) { return i % 2 == 0; })
                | std::views::take(2);
 
-    auto list = res | std::ranges::to<std::list<int>>();
+    auto list = res | std::ranges::to < std::list < int >> ();
 
     ywl::print_ln(list).flush();
 
-    auto feedback_gen = ident_feedback_gen();
-    feedback_gen.set_feedback_callback([](uint32_t i) {
-        ywl::print_ln("Feedback: ", i).flush();
-    });
+    auto feedback_gen = ident_feedback_gen()
+            .with_feedback_callback([](uint32_t i) {
+                ywl::printf_ln("Feedback: {}", i).flush();
+            });
+
 
     for (int i = 0; i < 10; ++i) {
         ywl::print_ln(feedback_gen.yield_value(i)).flush();
