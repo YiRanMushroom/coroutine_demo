@@ -1,5 +1,7 @@
 import ywl.prelude;
 
+import ywl.miscellaneous.multithreading.channel;
+
 void delete_int(const int *p) {
     ywl::print_ln("delete_int: ", *p).flush();
     delete p;
@@ -49,7 +51,51 @@ ident_feedback_gen() {
 }
 
 int main() {
-    std::unique_ptr<int> uniptr = std::make_unique<int>(42);
+    try {
+        auto receiver =
+                ywl::miscellaneous::multi_threading::make_simple_mpmc_channel<int>().second;
+
+        std::atomic_int counter = 0;
+        std::function<void()> send = [sender = receiver.subscribe(), &counter] {
+            for (int i = 0; i < 100; ++i) {
+                try {
+                    sender.send(counter++);
+                } catch (const std::exception &e) {
+                    ywl::print_ln("send: ", e.what()).flush();
+                    return;
+                }
+            }
+        };
+
+        std::atomic_bool finished = false;
+
+        std::function<void()> receive = [receiver, &finished] {
+            while (!finished) {
+                auto value = receiver.receive_strong();
+                if (value.has_value()) {
+                    ywl::print_ln("receive: ", value.value());
+                }
+            }
+        };
+
+        std::vector <std::jthread> threads_send;
+        std::vector <std::jthread> threads_receive;
+
+        for (int i = 0; i < 5; ++i) {
+            threads_send.emplace_back(send);
+        }
+
+        for (int i = 0; i < 50; ++i) {
+            threads_receive.emplace_back(receive);
+        }
+
+        finished = true;
+    } catch (std::exception &e) {
+        ywl::print_ln("Exception: ", e.what());
+    } catch (...) {
+        ywl::print_ln("Unknown exception");
+    }
+/*    std::unique_ptr<int> uniptr = std::make_unique<int>(42);
 
     std::shared_ptr<int> shptr = std::make_shared<int>(42);
     auto cp{shptr};
@@ -94,5 +140,5 @@ int main() {
 
     for (int i = 0; i < 10; ++i) {
         ywl::print_ln(feedback_gen.yield_value(i)).flush();
-    }
+    }*/
 }
